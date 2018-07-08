@@ -18,4 +18,6 @@ public interface NewsDao {
     public List<NewsEntity> getNewsList(int ds);
 
     public List<NewsEntity> getNewsList();
+
+    public List<NewsEntity> getNewsListWithLimit(long num);
 }

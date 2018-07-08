@@ -58,4 +58,12 @@ public class NewsDaoImpl implements NewsDao {
         Query query = sessionFactory.getCurrentSession().createQuery(hsql);
         return query.list();
     }
+
+    @Override
+    public List<NewsEntity> getNewsListWithLimit(long num) {
+        String hsql = "FROM NewsEntity n limit ?";
+        Query query = sessionFactory.getCurrentSession().createQuery(hsql);
+        query.setLong(0, num);
+        return query.list();
+    }
 }

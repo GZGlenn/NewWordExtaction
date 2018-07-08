@@ -23,10 +23,13 @@ public class TestHanlp {
         wordObj2.setNum(22);
 
         System.out.println(wordSet.contains(wordObj2));
-        
+
         wordSet.add(wordObj2);
 
         System.out.println(wordSet.size());
         System.out.println(wordSet.iterator().next().getNum());
+
+        System.out.println(content.indexOf("ddd"));
+        System.out.println(content.substring(content.indexOf("你好")+2));
     }
 }

@@ -28,5 +28,8 @@ public class TestHanlp {
 
         System.out.println(wordSet.size());
         System.out.println(wordSet.iterator().next().getNum());
+
+        System.out.println(content.indexOf("ddd"));
+        System.out.println(content.substring(content.indexOf("你好")+2));
     }
 }

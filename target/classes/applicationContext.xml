@@ -86,6 +86,7 @@
         <property name="mappingLocations">
             <list>
                 <value>classpath:NewsEntity.hbm.xml</value>
+                <value>classpath:WordEntity.hbm.xml</value>
             </list>
         </property>
     </bean>

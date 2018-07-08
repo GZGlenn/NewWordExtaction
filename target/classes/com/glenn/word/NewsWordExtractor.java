@@ -1,11 +1,12 @@
 package com.glenn.word;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 
 public interface NewsWordExtractor {
 
-    public HashSet<Word> getCandidateWord(ArrayList<String> content);
+    public HashMap<String, Word> getCandidateWord(ArrayList<String> content);
 
-    public HashSet<Word> getNewWords(HashSet<Word> wordSet, ArrayList<String> content);
+    public HashSet<Word> getNewWords(HashMap<String, Word> wordMap, ArrayList<String> content);
 }

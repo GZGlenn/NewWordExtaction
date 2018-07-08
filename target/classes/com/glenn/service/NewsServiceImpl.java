@@ -41,6 +41,11 @@ public class NewsServiceImpl implements NewsService {
     }
 
     @Override
+    public List<NewsEntity> getNewsWithLimit(long num) {
+        return this.newsDao.getNewsListWithLimit(num);
+    }
+
+    @Override
     public List<NewsEntity> getNews() {
         return this.newsDao.getNewsList();
     }
