@@ -3,6 +3,7 @@ package com.glenn.word;
 import com.hankcs.hanlp.HanLP;
 import com.hankcs.hanlp.seg.common.Term;
 
+import javax.persistence.Tuple;
 import java.util.*;
 
 /**
@@ -10,7 +11,7 @@ import java.util.*;
  */
 public class NewsWordExtractorImpl implements NewsWordExtractor {
 
-    public static int MAXNGRAM = 5;
+    public static int MAXNGRAM = 4;
 
     public double frezzDegreeThre;
     public double freeDegreeThre;
@@ -78,16 +79,16 @@ public class NewsWordExtractorImpl implements NewsWordExtractor {
         for (int i = 1; i <= this.nGram; i++) {
             for (String sentence : setences) {
                 for (int start = 0 ; start <= sentence.length() - i; start++) {
-                    String word = sentence.substring(start, start + 1);
+                    String word = sentence.substring(start, start + i);
                     if (!result.containsKey(word)) {
                         result.put(word, new Word(word));
+                        totalNum++;
                     }
                     else {
                         Word wordObj = result.get(word);
                         wordObj.setNum(wordObj.getNum() + 1);
                         result.put(word, wordObj);
                     }
-                    totalNum++;
                 }
             }
         }
@@ -138,8 +139,8 @@ public class NewsWordExtractorImpl implements NewsWordExtractor {
 
     @Override
     public HashSet<Word> getNewWords(HashMap<String, Word> wordSet, ArrayList<String> content) {
-        calStatisticInfo(wordSet, content);
-        HashMap<String, Word> cleanWordMap = cleanWord(wordSet);
+        HashMap<String, Word> cleanWordSet = calStatisticInfo(wordSet, content);
+        HashMap<String, Word> cleanWordMap = cleanWord(cleanWordSet);
 
         HashSet<Word> result = new HashSet<>();
         for (HashMap.Entry<String, Word> entry : cleanWordMap.entrySet()) {
@@ -148,22 +149,51 @@ public class NewsWordExtractorImpl implements NewsWordExtractor {
         return result;
     }
 
-    private void calStatisticInfo(HashMap<String, Word> wordSet, ArrayList<String> content) {
+    private HashMap<String, Word> calStatisticInfo(HashMap<String, Word> wordSet, ArrayList<String> content) {
         calFrezzDegree(wordSet);
-        for (Iterator<HashMap.Entry<String, Word>> it = wordSet.entrySet().iterator(); it.hasNext();){
-            HashMap.Entry<String, Word> item = it.next();
-            if (item.getValue().getFrequency() / item.getValue().getFrezzDegree() <= this.frezzDegreeThre) {
-                it.remove();
+        HashMap<String, Word> cleanWordSetByFrezz = new HashMap<>();
+
+        if (frezzDegreeThre <= 0) {
+            ArrayList<Double> frezzList = new ArrayList<>();
+            for (Iterator<HashMap.Entry<String, Word>> it = wordSet.entrySet().iterator(); it.hasNext();){
+                HashMap.Entry<String, Word> item = it.next();
+                frezzList.add(item.getValue().getFrequency() / item.getValue().getFrezzDegree());
             }
+            frezzList.sort(new Comparator <Double>() {
+                @Override
+                public int compare(Double o1, Double o2) {
+                    if(o1 < o2){
+                        return 1;
+                    }else if(o1 > o2){
+                        return -1;
+                    }
+                    return 0;
+                }
+            });
+            double total = frezzList.size();
+            frezzDegreeThre = frezzList.get((int)Math.round(0.1 * total));
         }
 
-        calFreeDegree(wordSet, content);
         for (Iterator<HashMap.Entry<String, Word>> it = wordSet.entrySet().iterator(); it.hasNext();){
             HashMap.Entry<String, Word> item = it.next();
-            if (item.getValue().getFreeDegree() <= this.freeDegreeThre) {
-                it.remove();
+
+            double ratio = item.getValue().getFrequency() / item.getValue().getFrezzDegree();
+            if (ratio <= this.frezzDegreeThre) {
+                continue;
             }
+            cleanWordSetByFrezz.put(item.getKey(), item.getValue());
         }
+
+        calFreeDegree(cleanWordSetByFrezz, content);
+        HashMap<String, Word> cleanWordSetByFree = new HashMap<>();
+        for (Iterator<HashMap.Entry<String, Word>> it = cleanWordSetByFrezz.entrySet().iterator(); it.hasNext();){
+            HashMap.Entry<String, Word> item = it.next();
+            if (item.getValue().getFreeDegree() <= this.freeDegreeThre) {
+                continue;
+            }
+            cleanWordSetByFree.put(item.getKey(), item.getValue());
+        }
+        return cleanWordSetByFree;
     }
 
     private void calFrezzDegree(HashMap<String, Word> wordSet) {
@@ -173,33 +203,40 @@ public class NewsWordExtractorImpl implements NewsWordExtractor {
 
             String targetWordStr = entry.getKey();
             // dynamic rule
-            ArrayList<Double> dynamicFrezzScore = new ArrayList<>(targetWordStr.length());
-            dynamicFrezzScore.set(0, entry.getValue().getFrequency());
-            for (int i = 1 ; i < targetWordStr.length(); i++) {
-                String tmpWord1 = targetWordStr.charAt(i) + "";
-                String tmpWord2 = targetWordStr.charAt(i-1) + tmpWord1;
-                double frezz;
-
-                if (i == 1) {
-                    frezz = Math.max(wordSet.get(tmpWord2).getFrequency(),
-                            dynamicFrezzScore.get(i-1) * wordSet.get(tmpWord1).getFrequency());
-                } else if (i == 2) {
-                    String tmpWord3 = targetWordStr.charAt(i-2) + tmpWord2;
-                    frezz = Math.max(wordSet.get(tmpWord3).getFrequency(),
-                            Math.max(dynamicFrezzScore.get(i-2) * wordSet.get(tmpWord2).getFrequency(),
-                                    dynamicFrezzScore.get(i-1) * wordSet.get(tmpWord1).getFrequency()));
-                } else {
-                    String tmpWord3 = targetWordStr.charAt(i-2) + tmpWord2;
-                    String tmpWord4 = targetWordStr.charAt(i-3) + tmpWord3;
-                    frezz = Math.max(wordSet.get(tmpWord4).getFrequency(),
-                            Math.max(dynamicFrezzScore.get(i-3) * wordSet.get(tmpWord3).getFrequency(),
-                                    Math.max(dynamicFrezzScore.get(i-2) * wordSet.get(tmpWord2).getFrequency(),
-                                            dynamicFrezzScore.get(i-1) * wordSet.get(tmpWord1).getFrequency())));
-                }
-                dynamicFrezzScore.set(i, frezz);
+            ArrayList<Double> dynamicFrezzScore = new ArrayList<>();
+            for (int i = 0 ; i < targetWordStr.length(); i++) {
+                dynamicFrezzScore.add(i, 0.0);
             }
 
-            wordSet.get(entry.getKey()).setFrezzDegree(dynamicFrezzScore.get(dynamicFrezzScore.size() - 1));
+            double frezz = -1;
+            String tmpWord0 = targetWordStr.charAt(0) + "";
+            String tmpWord1 = targetWordStr.charAt(1) + "";
+            if (targetWordStr.length() == 2) {
+                frezz = wordSet.get(tmpWord0).getFrequency() * wordSet.get(tmpWord1).getFrequency();
+            }
+            else if (targetWordStr.length() == 3) {
+                String tmpWord2 = targetWordStr.charAt(2) + "";
+                frezz = Math.max(wordSet.get(tmpWord0 + tmpWord1).getFrequency() * wordSet.get(tmpWord2).getFrequency(),
+                        wordSet.get(tmpWord1 + tmpWord2).getFrequency() * wordSet.get(tmpWord0).getFrequency());
+            }
+            else if (targetWordStr.length() == 4) {
+                String tmpWord2 = targetWordStr.charAt(2) + "";
+                String tmpWord3 = targetWordStr.charAt(3) + "";
+                frezz = Math.max(wordSet.get(tmpWord0 + tmpWord1 + tmpWord2).getFrequency() * wordSet.get(tmpWord3).getFrequency(),
+                        Math.max(wordSet.get(tmpWord0).getFrequency() * wordSet.get(tmpWord1 + tmpWord2 + tmpWord3).getFrequency(),
+                        wordSet.get(tmpWord0 + tmpWord1).getFrequency() * wordSet.get(tmpWord2 + tmpWord3).getFrequency()));
+            }
+            else if (targetWordStr.length() == 5) {
+                String tmpWord2 = targetWordStr.charAt(2) + "";
+                String tmpWord3 = targetWordStr.charAt(3) + "";
+                String tmpWord4 = targetWordStr.charAt(4) + "";
+                frezz = Math.max(wordSet.get(tmpWord0 + tmpWord1 + tmpWord2 + tmpWord3).getFrequency() * wordSet.get(tmpWord4).getFrequency(),
+                        Math.max(wordSet.get(tmpWord1+tmpWord2+tmpWord3+tmpWord4).getFrequency() * wordSet.get(tmpWord0).getFrequency(),
+                        Math.max(wordSet.get(tmpWord0+tmpWord1+tmpWord2).getFrequency() * wordSet.get(tmpWord3+tmpWord4).getFrequency(),
+                                 wordSet.get(tmpWord2+tmpWord3+tmpWord4).getFrequency() * wordSet.get(tmpWord0 + tmpWord1).getFrequency())));
+            }
+
+            wordSet.get(entry.getKey()).setFrezzDegree(frezz);
         }
 
 
@@ -247,11 +284,11 @@ public class NewsWordExtractorImpl implements NewsWordExtractor {
             wordMap.put(word, wordMap.getOrDefault(word, 0.0) + 1);
         }
         if (sentence.length() >= 2) {
-            String word = sentence.charAt(0) + sentence.charAt(1) + "";
+            String word = sentence.charAt(0) + "" + sentence.charAt(1);
             wordMap.put(word, wordMap.getOrDefault(word, 0.0) + 1);
         }
         if (sentence.length() >= 3) {
-            String word = sentence.charAt(0) + sentence.charAt(1) + sentence.charAt(3) + "";
+            String word = sentence.charAt(0) + "" + sentence.charAt(1) + sentence.charAt(2);
             wordMap.put(word, wordMap.getOrDefault(word, 0.0) + 1);
         }
     }
@@ -263,11 +300,11 @@ public class NewsWordExtractorImpl implements NewsWordExtractor {
             wordMap.put(word, wordMap.getOrDefault(word, 0.0) + 1);
         }
         if (sentence.length() >= 2) {
-            String word = sentence.charAt(len - 2) + sentence.charAt(len - 1) + "";
+            String word = sentence.charAt(len - 2) + "" + sentence.charAt(len - 1);
             wordMap.put(word, wordMap.getOrDefault(word, 0.0) + 1);
         }
         if (sentence.length() >= 3) {
-            String word = sentence.charAt(len - 3) + sentence.charAt(len - 2) + sentence.charAt(len - 1) + "";
+            String word = sentence.charAt(len - 3) + "" + sentence.charAt(len - 2) + sentence.charAt(len - 1) + "";
             wordMap.put(word, wordMap.getOrDefault(word, 0.0) + 1);
         }
     }
@@ -291,7 +328,35 @@ public class NewsWordExtractorImpl implements NewsWordExtractor {
 
     // clean too short word, too little fre word
     private HashMap<String, Word> cleanWord(HashMap<String, Word> wordSet) {
-        return null;
+        if (frequencyDegreeThre == 0) {
+            double totalNum = wordSet.size();
+            ArrayList<Double> frequencies = new ArrayList<Double>();
+            for (HashMap.Entry<String, Word> entry : wordSet.entrySet()) {
+                frequencies.add(0, entry.getValue().getFrequency());
+            }
+
+            frequencies.sort(new Comparator <Double>() {
+                @Override
+                public int compare(Double o1, Double o2) {
+                    if(o1 < o2){
+                        return 1;
+                    }else if(o1 > o2){
+                        return -1;
+                    }
+                    return 0;
+                }
+            });
+            frequencyDegreeThre = frequencies.get((int)Math.round(0.1 * totalNum));
+        }
+
+        HashMap<String, Word> cleanMap = new HashMap<>();
+        for (HashMap.Entry<String, Word> entry : wordSet.entrySet()) {
+            if (entry.getValue().getFrequency() > frequencyDegreeThre) {
+                cleanMap.put(entry.getKey(), entry.getValue());
+            }
+        }
+
+        return cleanMap;
     }
 }
 

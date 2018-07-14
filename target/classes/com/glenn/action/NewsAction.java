@@ -10,5 +10,5 @@ public interface NewsAction {
 
     public List<NewsEntity> getNews(int ds);
 
-    public List<NewsEntity> getNewsWithLimit(long num);
+    public List<NewsEntity> getNewsWithLimit(int num);
 }

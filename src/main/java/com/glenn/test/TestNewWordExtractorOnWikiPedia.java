@@ -1,30 +1,22 @@
 package com.glenn.test;
 
-import com.glenn.action.NewsActionImpl;
-import com.glenn.entity.NewsEntity;
+import com.glenn.util.WikiPediaUtil;
 import com.glenn.word.NewsWordExtractorImpl;
 import com.glenn.word.Word;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 
-public class TestNewWordExtractor {
+public class TestNewWordExtractorOnWikiPedia {
 
     public static void main(String[] args) {
-        int newsNum = 100000;
-        NewsActionImpl newsAction = new NewsActionImpl();
-        List<NewsEntity> newsList = newsAction.getNewsWithLimit(newsNum);
-
-        ArrayList<String> contents = new ArrayList<>();
-        for (NewsEntity entity : newsList) {
-            contents.add(entity.getContent());
-        }
+        String root = "/home/public/dataset/nlp/GNLP/words/source/extracted/AA";
+        ArrayList<String> contents = WikiPediaUtil.read(root, 100000);
 
         NewsWordExtractorImpl wordExtractor = new NewsWordExtractorImpl();
 
         wordExtractor.setFreeDegreeThre(3);
-//        wordExtractor.setFrezzDegreeThre(1000);
+        wordExtractor.setFrezzDegreeThre(1000);
         HashSet<Word> newWords = wordExtractor.coreExtraction(contents);
 
         for (Word word : newWords) {

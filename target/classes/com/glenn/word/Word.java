@@ -79,6 +79,8 @@ public class Word extends Object implements Serializable {
         this.frezzDegree = -1;
     }
 
+
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -91,4 +93,10 @@ public class Word extends Object implements Serializable {
     public int hashCode() {
         return Objects.hash(word, pos);
     }
+
+    public String showDetail() {
+        String str = "word :" + word + ", num:" + num + ", frequency:" + frequency + ", free:" + freeDegree + ", frezz:" + frezzDegree;
+        return str;
+    }
+
 }

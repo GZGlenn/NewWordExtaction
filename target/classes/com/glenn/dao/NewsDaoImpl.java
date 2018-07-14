@@ -8,6 +8,8 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 @Transactional(rollbackFor = Exception.class)
@@ -60,10 +62,51 @@ public class NewsDaoImpl implements NewsDao {
     }
 
     @Override
-    public List<NewsEntity> getNewsListWithLimit(long num) {
-        String hsql = "FROM NewsEntity n limit ?";
+    public List<NewsEntity> getNewsListWithLimit(int num) {
+        String hsql = "FROM NewsEntity n";
         Query query = sessionFactory.getCurrentSession().createQuery(hsql);
-        query.setLong(0, num);
+        query.setMaxResults(num);
         return query.list();
+    }
+    @Override
+    public double getTotalNum() {
+        String hsql = "SELECT COUNT(*) FROM NewsEntity n";
+        Query query = sessionFactory.getCurrentSession().createQuery(hsql);
+        double totalNum = Double.valueOf(query.uniqueResult().toString());
+        return totalNum;
+    }
+
+    @Override
+    public double getTotalNum(int ds) {
+        String hsql = "SELECT COUNT(1) FROM NewsEntity n where n.ds=?";
+        Query query = sessionFactory.getCurrentSession().createQuery(hsql);
+        query.setInteger(0, ds);
+        double totalNum = Double.valueOf(query.uniqueResult().toString());
+        return totalNum;
+    }
+
+    @Override
+    public List<Integer> getDsList() {
+        String hsql = "SELECT ds from NewsEntity n group by n.ds";
+        Query query = sessionFactory.getCurrentSession().createQuery(hsql);
+        List<Integer> dsObjList = query.list();
+
+        ArrayList<Integer> result = new ArrayList<>();
+        for (Integer dsInfo : dsObjList) {
+            result.add(dsInfo);
+        }
+
+        result.sort(new Comparator<Integer>() {
+            @Override
+            public int compare(Integer o1, Integer o2) {
+                if(o1 < o2){
+                    return 1;
+                }else if(o1 > o2){
+                    return -1;
+                }
+                return 0;
+            }
+        });
+        return result;
     }
 }

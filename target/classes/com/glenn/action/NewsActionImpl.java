@@ -29,7 +29,7 @@ public class NewsActionImpl implements NewsAction {
     }
 
     @Override
-    public List<NewsEntity> getNewsWithLimit(long num) {
-        return newsService.getNewsWithLimit(num);
+    public List<NewsEntity> getNewsWithLimit(int num) {
+        return newsService.getLastNewsWithLimit(num);
     }
 }

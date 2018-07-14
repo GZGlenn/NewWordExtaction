@@ -16,7 +16,7 @@ public class NewWordExtraction {
 
     public static void main(String[] args) {
         int ds = Integer.valueOf(DateUtil.format(DateUtil.parseDate(DateUtil.today()), "yyyyMMdd"));
-        long newsNum = 100000;
+        int newsNum = 100000;
         NewsActionImpl newsAction = new NewsActionImpl();
         List<NewsEntity> newsList = newsAction.getNewsWithLimit(newsNum);
 
@@ -27,8 +27,8 @@ public class NewWordExtraction {
 
         NewsWordExtractorImpl wordExtractor = new NewsWordExtractorImpl();
 
-        wordExtractor.setFreeDegreeThre(0.0001);
-        wordExtractor.setFrezzDegreeThre(0.01);
+        wordExtractor.setFreeDegreeThre(3);
+        wordExtractor.setFrezzDegreeThre(1000);
         HashSet<Word> newWords = wordExtractor.coreExtraction(contents);
         ArrayList<WordEntity> newWordEntityList = new ArrayList<>();
         for (Word word : newWords) {

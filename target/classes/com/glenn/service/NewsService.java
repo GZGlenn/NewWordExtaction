@@ -15,7 +15,9 @@ public interface NewsService {
 
     public List<NewsEntity> getNews(int ds);
 
-    public List<NewsEntity> getNewsWithLimit(long num);
+    public List<NewsEntity> getNewsWithLimit(int num);
+
+    public List<NewsEntity> getLastNewsWithLimit(long num);
 
     public List<NewsEntity> getNews();
 }

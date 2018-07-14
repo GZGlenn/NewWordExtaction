@@ -6,6 +6,7 @@ import com.glenn.entity.NewsEntityPK;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service("newsService")
@@ -41,8 +42,23 @@ public class NewsServiceImpl implements NewsService {
     }
 
     @Override
-    public List<NewsEntity> getNewsWithLimit(long num) {
+    public List<NewsEntity> getNewsWithLimit(int num) {
         return this.newsDao.getNewsListWithLimit(num);
+    }
+
+    @Override
+    public List<NewsEntity> getLastNewsWithLimit(long num) {
+        if (this.newsDao.getTotalNum() <= num) return this.newsDao.getNewsList();
+
+        List<Integer> dsList = this.newsDao.getDsList();
+        ArrayList<NewsEntity> newsList = new ArrayList<>();
+
+        for (Integer ds : dsList) {
+            newsList.addAll(this.newsDao.getNewsList(ds));
+            if (newsList.size() >= num) break;
+        }
+
+        return newsList;
     }
 
     @Override
