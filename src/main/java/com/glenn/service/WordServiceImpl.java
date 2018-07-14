@@ -127,4 +127,9 @@ public class WordServiceImpl implements WordService {
     public List<Integer> getDsList() {
         return this.wordDao.getDsList();
     }
+
+    @Override
+    public List<WordEntity> getWordListFromLastDs() {
+        return this.wordDao.getLastDayWords();
+    }
 }

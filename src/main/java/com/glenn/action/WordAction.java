@@ -3,6 +3,7 @@ package com.glenn.action;
 import com.glenn.entity.WordEntity;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public interface WordAction {
 
@@ -17,5 +18,7 @@ public interface WordAction {
     public boolean delete(WordEntity word);
 
     public boolean deleteDue();
+
+    public List<WordEntity> getWordListFromLastDs();
 
 }

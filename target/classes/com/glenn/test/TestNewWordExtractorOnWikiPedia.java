@@ -11,7 +11,7 @@ public class TestNewWordExtractorOnWikiPedia {
 
     public static void main(String[] args) {
         String root = "/home/public/dataset/nlp/GNLP/words/source/extracted/AA";
-        ArrayList<String> contents = WikiPediaUtil.read(root, 100000);
+        ArrayList<String> contents = WikiPediaUtil.read(root, 200000);
 
         NewsWordExtractorImpl wordExtractor = new NewsWordExtractorImpl();
 

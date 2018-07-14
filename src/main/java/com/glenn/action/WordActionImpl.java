@@ -75,4 +75,9 @@ public class WordActionImpl implements WordAction {
         return true;
     }
 
+    @Override
+    public List<WordEntity> getWordListFromLastDs() {
+        return wordService.getWordListFromLastDs();
+    }
+
 }

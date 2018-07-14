@@ -29,4 +29,6 @@ interface WordService {
     public double getNum();
 
     public List<Integer> getDsList();
+
+    public List<WordEntity> getWordListFromLastDs();
 }

@@ -171,7 +171,7 @@ public class NewsWordExtractorImpl implements NewsWordExtractor {
                 }
             });
             double total = frezzList.size();
-            frezzDegreeThre = frezzList.get((int)Math.round(0.1 * total));
+            frezzDegreeThre = Math.max(1000, frezzList.get((int)Math.round(0.1 * total)));
         }
 
         for (Iterator<HashMap.Entry<String, Word>> it = wordSet.entrySet().iterator(); it.hasNext();){
