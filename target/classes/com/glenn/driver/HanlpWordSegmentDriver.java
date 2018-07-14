@@ -12,7 +12,7 @@ import java.util.List;
 public class HanlpWordSegmentDriver {
 
     public static boolean isCleanWord(Term term) {
-        if (term.nature.startsWith("nx") || 
+        if (term.nature.startsWith("nx") ||
                 term.word.matches(".*\\d+.*") ||
                 term.word.matches("([0-9]\\d*\\.?\\d*)|(0\\.\\d*[0-9])") ||
                 term.nature.startsWith('w')) return false;
